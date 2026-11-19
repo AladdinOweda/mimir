@@ -1,0 +1,22 @@
+{
+  "runId": "wr-1",
+  "workflowId": "software-project-creation",
+  "workflowVersion": "1.0",
+  "status": "waiting_approval",
+  "currentNodeId": "approval",
+  "nodeStates": {
+    "analyze": { "status": "succeeded", "attempts": 1, "idempotencyKey": "ik-a" },
+    "design": { "status": "succeeded", "attempts": 1, "idempotencyKey": "ik-d" },
+    "approval": { "status": "waiting", "attempts": 0 }
+  },
+  "checkpoints": [
+    { "checkpointId": "cp-1", "atEpochMs": 1730650000000, "nodeId": "analyze", "stateRef": "done" },
+    { "checkpointId": "cp-2", "atEpochMs": 1730650001000, "nodeId": "design", "stateRef": "done" }
+  ],
+  "approvals": [
+    { "approvalId": "ap-1", "nodeId": "approval", "status": "pending" }
+  ],
+  "idempotencyKey": "ik-run-1",
+  "startedAtEpochMs": 1730650000000,
+  "updatedAtEpochMs": 1730650001000
+}

@@ -1,0 +1,20 @@
+{
+  "id": "software-project-creation",
+  "version": "1.0",
+  "title": "Software project creation",
+  "inputs": [{ "id": "project_requirement", "type": "text", "required": true }],
+  "nodes": [
+    { "id": "analyze", "type": "agent", "capability": "requirements.analysis" },
+    { "id": "design", "type": "agent", "capability": "architecture.design" },
+    { "id": "approval", "type": "human_approval" },
+    { "id": "implement", "type": "agent", "capability": "software.implementation" },
+    { "id": "verify", "type": "agent", "capability": "quality.verification" }
+  ],
+  "edges": [
+    { "from": "analyze", "to": "design" },
+    { "from": "design", "to": "approval" },
+    { "from": "approval", "to": "implement" },
+    { "from": "implement", "to": "verify" }
+  ],
+  "runtimeRequirements": []
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mimir.local/schemas/agent-schema.json",
+  "title": "MimirAgentDefinition",
+  "type": "object",
+  "required": ["id", "version", "role", "objective", "capabilities"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "version": { "type": "string" },
+    "role": { "type": "string" },
+    "objective": { "type": "string" },
+    "instructionsRef": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "modelPolicy": {
+      "type": "object",
+      "properties": {
+        "preferredModels": { "type": "array", "items": { "type": "string" } },
+        "maxCostUnits": { "type": "number" },
+        "allowCloud": { "type": "boolean", "default": false }
+      }
+    },
+    "permissionProfile": { "type": "string" },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "maxSteps": { "type": "integer", "minimum": 1 },
+        "maxRuntimeMs": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "outputSchemaRef": { "type": "string" },
+    "verifier": { "type": "string" },
+    "stopConditions": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false
+}

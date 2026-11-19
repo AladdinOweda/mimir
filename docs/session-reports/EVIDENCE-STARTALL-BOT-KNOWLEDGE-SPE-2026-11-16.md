@@ -1,0 +1,4 @@
+KernelHostStartAllPathTest OK
+BotDeepenTest OK
+KnowledgeDeepenTest OK
+SpeDeepenTest OK

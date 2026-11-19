@@ -1,0 +1,21 @@
+# Gradle / Kotlin
+.gradle/
+build/
+.kotlin/
+local.properties
+*.class
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+# Local data and secrets (never commit)
+*.db
+*.sqlite
+*.sqlite3
+*.jks
+*.keystore
+.env
+.env.*
+# Drive-era snapshots
+mimir-repo-canonical*.zip
+MIMIR-SSOT-FOR-GITHUB-2026-11-17-FIXED.zip

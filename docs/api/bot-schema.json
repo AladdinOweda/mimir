@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mimir.local/schemas/bot-schema.json",
+  "title": "MimirBotProfile",
+  "type": "object",
+  "required": ["id", "version", "displayName"],
+  "properties": {
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "displayName": { "type": "string" },
+    "persona": { "type": "string" },
+    "instructions": { "type": "string" },
+    "modelRef": { "type": "string", "description": "ModelId or policy ref — not a vendor gateway" },
+    "workspaceId": { "type": "string" },
+    "memoryScope": { "type": "string", "enum": ["bot", "project", "platform", "none"] },
+    "permissionProfile": { "type": "string" },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "maxSteps": { "type": "integer" },
+        "maxCostUnits": { "type": "number" },
+        "maxRuntimeMs": { "type": "integer" }
+      }
+    },
+    "computerUse": { "type": "string", "enum": ["off", "read_only", "workspace", "full_requires_approval"] },
+    "enabled": { "type": "boolean", "default": true }
+  },
+  "additionalProperties": false
+}

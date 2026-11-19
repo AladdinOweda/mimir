@@ -1,0 +1,11 @@
+{
+  "id": "architect-1",
+  "version": "1.0",
+  "role": "System Architect",
+  "objective": "Produce architecture contracts from requirements",
+  "capabilities": ["architecture.design", "docs.write"],
+  "modelPolicy": { "preferredModels": ["local-small"], "allowCloud": false, "maxCostUnits": 10 },
+  "permissionProfile": "architect-default",
+  "budgets": { "maxSteps": 20, "maxRuntimeMs": 600000 },
+  "stopConditions": ["output_accepted", "budget_exhausted"]
+}

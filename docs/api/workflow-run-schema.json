@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mimir.local/schemas/workflow-run-schema.json",
+  "title": "MimirWorkflowRun",
+  "type": "object",
+  "required": ["runId", "workflowId", "workflowVersion", "status"],
+  "properties": {
+    "runId": { "type": "string" },
+    "workflowId": { "type": "string" },
+    "workflowVersion": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "running", "paused", "waiting_approval", "succeeded", "failed", "cancelled"]
+    },
+    "currentNodeId": { "type": ["string", "null"] },
+    "nodeStates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "attempts": { "type": "integer" },
+          "idempotencyKey": { "type": "string" },
+          "outputRef": { "type": "string" }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["checkpointId", "atEpochMs", "nodeId"],
+        "properties": {
+          "checkpointId": { "type": "string" },
+          "atEpochMs": { "type": "integer" },
+          "nodeId": { "type": "string" },
+          "stateRef": { "type": "string" }
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "approvalId": { "type": "string" },
+          "nodeId": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "granted", "denied"] }
+        }
+      }
+    },
+    "idempotencyKey": { "type": "string" },
+    "errorCode": { "type": ["string", "null"] },
+    "startedAtEpochMs": { "type": "integer" },
+    "updatedAtEpochMs": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

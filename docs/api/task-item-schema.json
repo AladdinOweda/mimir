@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mimir.local/schemas/task-item-schema.json",
+  "title": "MimirEngineeringTaskItem",
+  "type": "object",
+  "required": ["id", "title", "criterion", "requirementIds"],
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "criterion": { "type": "string" },
+    "requirementIds": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "testCommand": { "type": "string" },
+    "lane": { "type": "string" },
+    "priority": { "type": "integer" },
+    "dependsOn": { "type": "array", "items": { "type": "string" } }
+  }
+}

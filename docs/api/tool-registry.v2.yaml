@@ -1,0 +1,43 @@
+# Tool Registry v2 — enforceable contract (not informational only)
+version: "2.0"
+tools:
+  - id: terminal.command.execute
+    capability: terminal.command.execute
+    riskClass: high
+    requiresApproval: true
+    sideEffect: true
+    idempotent: false
+    timeoutMs: 60000
+    permissions: [terminal.execute]
+    inputSchema:
+      required: [command]
+    sandboxProfile: openshell-default
+  - id: forge.scaffold.run
+    capability: forge.scaffold.run
+    riskClass: medium
+    requiresApproval: false
+    sideEffect: true
+    idempotent: true
+    timeoutMs: 120000
+    permissions: [forge.write]
+    inputSchema:
+      required: [templateId, targetPath]
+  - id: browser.tab.open
+    capability: browser.tab.open
+    riskClass: low
+    requiresApproval: false
+    sideEffect: false
+    idempotent: true
+    timeoutMs: 15000
+    permissions: [browser.navigate]
+  - id: vault.put
+    capability: vault.put
+    riskClass: high
+    requiresApproval: false
+    sideEffect: true
+    idempotent: true
+    timeoutMs: 10000
+    permissions: [vault.write]
+    inputSchema:
+      required: [key, value, passphrase]
+    notes: never log passphrase

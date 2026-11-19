@@ -1,0 +1,28 @@
+CREATE TABLE audit_entry (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  at_epoch_ms INTEGER NOT NULL,
+  principal_id TEXT NOT NULL,
+  capability_id TEXT NOT NULL,
+  decision TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  request_id TEXT NOT NULL,
+  approval_token_id TEXT
+);
+
+CREATE TABLE approval_token (
+  id TEXT NOT NULL PRIMARY KEY,
+  principal_id TEXT NOT NULL,
+  action_id TEXT NOT NULL,
+  target_resource TEXT NOT NULL,
+  granted_scope TEXT NOT NULL,
+  expires_at_epoch_ms INTEGER NOT NULL,
+  single_use INTEGER NOT NULL,
+  revoked INTEGER NOT NULL,
+  consumed INTEGER NOT NULL
+);
+
+CREATE TABLE permission_grant (
+  principal_id TEXT NOT NULL,
+  permission TEXT NOT NULL,
+  PRIMARY KEY (principal_id, permission)
+);
