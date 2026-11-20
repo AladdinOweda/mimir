@@ -38,16 +38,30 @@ tasks.register("printModules") {
 
 tasks.register("verifyModuleBuilds") {
     doLast {
-        val intermediate = setOf(":shared", ":shared:engine", ":apps")
-        val missing = rootProject.subprojects
-            .filter { it.path !in intermediate }
-            .filter {
-                !File(it.projectDir, "build.gradle.kts").exists() &&
-                    !File(it.projectDir, "build.gradle").exists()
-            }
-        if (missing.isNotEmpty()) {
-            throw GradleException("Missing build.gradle.kts for: " + missing.map { it.path })
+        val projects = rootProject.subprojects
+        val leaves = projects.filter { project ->
+            project.subprojects.isEmpty()
         }
-        println("All product subprojects have build scripts (${rootProject.subprojects.size - intermediate.size} leaves)")
+
+        if (leaves.isEmpty()) {
+            throw GradleException("No Gradle leaf modules were discovered")
+        }
+
+        val missing = leaves.filter { project ->
+            !File(project.projectDir, "build.gradle.kts").exists() &&
+                !File(project.projectDir, "build.gradle").exists()
+        }
+
+        if (missing.isNotEmpty()) {
+            throw GradleException(
+                "Missing build scripts for Gradle leaf modules: " +
+                    missing.map { "${it.path} -> ${it.projectDir}" }
+            )
+        }
+
+        println(
+            "All ${leaves.size} Gradle leaf modules have build scripts " +
+                "(${projects.size} projects discovered)"
+        )
     }
 }

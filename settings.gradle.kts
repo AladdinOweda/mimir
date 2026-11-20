@@ -78,12 +78,20 @@ project(":apps:desktop").projectDir = file("apps/desktop")
 
 val localProps = java.util.Properties()
 val localFile = file("local.properties")
-val hasAndroidSdk = localFile.exists().also {
-    if (it) localFile.inputStream().use { s -> localProps.load(s) }
-} && (localProps.getProperty("sdk.dir") != null || System.getenv("ANDROID_HOME") != null)
+if (localFile.exists()) {
+    localFile.inputStream().use { stream -> localProps.load(stream) }
+}
+
+val androidSdkDir = localProps.getProperty("sdk.dir")
+    ?: System.getenv("ANDROID_HOME")
+    ?: System.getenv("ANDROID_SDK_ROOT")
+
+val hasAndroidSdk = !androidSdkDir.isNullOrBlank() &&
+    file(androidSdkDir).isDirectory
+
 if (hasAndroidSdk) {
-include(":apps:androidApp")
-project(":apps:androidApp").projectDir = file("apps/androidApp")
+    include(":apps:androidApp")
+    project(":apps:androidApp").projectDir = file("apps/androidApp")
 }
 
 include(":adapters:browser")
