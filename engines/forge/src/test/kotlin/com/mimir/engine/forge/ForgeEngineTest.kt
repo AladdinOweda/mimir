@@ -46,7 +46,7 @@ class ForgeEngineTest {
         val dir = File.createTempFile("forge-proj", null).apply { delete(); mkdirs() }
         try {
             val eng = ForgeEngine(allowRealFs = true)
-            val r = eng.build(ForgeBuildRequest(null, dir.absolutePath))
+            val r = eng.build(ForgeBuildRequest(dir.absolutePath))
             assertTrue(!r.success)
             assertTrue(r.output.contains("gradlew_missing") || r.exitCode != 0)
         } finally {

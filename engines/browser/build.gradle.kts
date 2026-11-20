@@ -1,9 +1,12 @@
-plugins { kotlin("jvm") }
+plugins {
+    `java-library`
+    kotlin("jvm")
+}
 base { archivesName.set("engine-browser") }
 
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 dependencies {
-    implementation(project(":contracts:browser"))
+    api(project(":contracts:browser"))
     implementation(project(":shared:kernel"))
     implementation(project(":contracts:capability"))
     implementation(project(":adapters:browser"))

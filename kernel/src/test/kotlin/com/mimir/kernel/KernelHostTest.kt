@@ -57,6 +57,19 @@ class KernelHostTest {
     }
 
     @Test
+    fun stopEngineUpdatesStateAndKeepsEngineAttached() = runTest {
+        val host = KernelHost()
+        val eng = EchoEngine()
+        host.attach(eng, eng.describe())
+        host.registerAndStart(EngineId("echo"))
+
+        assertEquals(EngineState.Stopped, host.stopEngine(EngineId("echo")))
+        assertEquals(EngineState.Stopped, host.stateOf("echo"))
+        assertEquals(listOf("echo"), host.listEngineIds())
+        assertEquals(1, host.engineCount())
+    }
+
+    @Test
     fun permissionDenied() = runTest {
         val host = KernelHost()
         val eng = EchoEngine()

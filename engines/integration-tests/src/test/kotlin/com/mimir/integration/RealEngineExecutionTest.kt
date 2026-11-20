@@ -1,5 +1,6 @@
 package com.mimir.integration
 
+import com.mimir.adapters.process.JvmProcessExecutor
 import com.mimir.engine.process.ProcessRuntimeCapabilities
 import com.mimir.engine.process.ProcessRuntimeEngine
 import com.mimir.engine.terminal.TerminalCapabilities
@@ -26,7 +27,7 @@ class RealEngineExecutionTest {
 
     @Test
     fun process_real_echo_argv() = runTest {
-        val eng = ProcessRuntimeEngine()
+        val eng = ProcessRuntimeEngine(executor = JvmProcessExecutor())
         eng.start()
         val r = eng.invoke(
             InvocationRequest(
@@ -44,7 +45,7 @@ class RealEngineExecutionTest {
 
     @Test
     fun process_path_jail_denies_outside_workspace() = runTest {
-        val eng = ProcessRuntimeEngine(defaultWorkspace = File(System.getProperty("java.io.tmpdir"), "mimir-jail").also { it.mkdirs() }.absolutePath)
+        val eng = ProcessRuntimeEngine(executor = JvmProcessExecutor(), defaultWorkspace = File(System.getProperty("java.io.tmpdir"), "mimir-jail").also { it.mkdirs() }.absolutePath)
         eng.start()
         val r = eng.invoke(
             InvocationRequest(
@@ -96,7 +97,7 @@ class RealEngineExecutionTest {
 
     @Test
     fun terminal_session_and_echo_command() = runTest {
-        val eng = TerminalEngine()
+        val eng = TerminalEngine(executor = JvmProcessExecutor())
         eng.start()
         val open = eng.invoke(
             InvocationRequest(
@@ -163,7 +164,7 @@ class RealEngineExecutionTest {
     @Test
     fun process_through_kernel_real_echo() = runTest {
         val host = KernelHost()
-        val eng = ProcessRuntimeEngine()
+        val eng = ProcessRuntimeEngine(executor = JvmProcessExecutor())
         val man = eng.describe()
         host.attach(eng, man)
         host.registerAndStart(man.id)

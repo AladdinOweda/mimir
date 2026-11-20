@@ -45,6 +45,9 @@ class KernelHost(
     private data class RateBucket(var windowStart: Long, var count: Int)
 
     fun attach(engine: MimirEngine, manifest: EngineManifest) {
+        check(manifest.id.value !in engines) {
+            "Engine '${manifest.id.value}' is already attached"
+        }
         engines[manifest.id.value] = engine
         manifests[manifest.id.value] = manifest
         states[manifest.id.value] = EngineState.Discovered
@@ -187,6 +190,23 @@ class KernelHost(
 
     fun listEngineIds(): List<String> = engines.keys.toList()
     fun engineCount(): Int = engines.size
+
+    suspend fun stopEngine(
+        id: EngineId,
+        reason: String = "shutdown",
+    ): EngineState? {
+        val engine = engines[id.value] ?: return null
+        val stoppedState = engine.stop(reason)
+        states[id.value] = stoppedState
+        events.publish(
+            EventEnvelope(
+                type = "kernel.engine.stopped",
+                source = "KernelHost",
+                payload = mapOf("engineId" to id.value, "state" to stoppedState.name),
+            ),
+        )
+        return stoppedState
+    }
 
     fun detach(id: String): Boolean {
         if (!engines.containsKey(id)) return false

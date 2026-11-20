@@ -1,5 +1,6 @@
 package com.mimir.composition
 
+import com.mimir.adapters.process.JvmProcessExecutor
 import com.mimir.engine.agent.AgentRuntimeEngine
 import com.mimir.engine.browser.BrowserEngine
 import com.mimir.engine.computer.ComputerUseEngine
@@ -67,7 +68,16 @@ class ProductContext(
     useDurableStores: Boolean = true,
     val shell: AppShellController = AppShellController(),
     val host: KernelHost = KernelHost(),
-) {
+) : AutoCloseable {
+    private val processExecutor = JvmProcessExecutor()
+    private val startAttemptOrder = linkedSetOf<String>()
+    private var shutdownPrepared = false
+    private var closed = false
+
+    private fun ensureOpen() {
+        check(!closed) { "ProductContext is closed" }
+    }
+
     val approvals: UserApprovalFacade = UserApprovalFacade(host.approvals)
     val activity: ActivityLog =
         if (useDurableStores) DurableFileActivityLog(File(dataDir, "activity.tsv"))
@@ -139,12 +149,13 @@ class ProductContext(
         /** noop | http-fetch | chromium — default http-fetch for real network smoke */
         browserDriverKind: String = System.getenv("MIMIR_BROWSER_DRIVER") ?: "http-fetch",
     ): ProductContext {
+        ensureOpen()
         dataDir.mkdirs()
         DefaultCapabilityPolicies.seed(host.capabilitySecurity)
         val list = buildList {
-            add(TerminalEngine())
-            add(ProcessRuntimeEngine())
-            if (includeForge) add(ForgeEngine())
+            add(TerminalEngine(executor = processExecutor))
+            add(ProcessRuntimeEngine(executor = processExecutor))
+            if (includeForge) add(ForgeEngine(executor = processExecutor))
             if (includeBrowser) add(BrowserEngine(driverKind = browserDriverKind))
             if (includeComputer) add(ComputerUseEngine())
             add(VaultEngine())
@@ -168,8 +179,15 @@ class ProductContext(
         }
         list.forEach { eng ->
             val manifest = runBlocking { eng.describe() }
+            check(manifest.id.value !in startAttemptOrder) {
+                "Cannot replace engine '${manifest.id.value}' while shutdown is pending"
+            }
+            check(manifest.id.value !in engines && manifest.id.value !in host.listEngineIds()) {
+                "Cannot attach duplicate engine '${manifest.id.value}'"
+            }
             host.attach(eng, manifest)
             engines[manifest.id.value] = eng
+            shutdownPrepared = false
         }
         loopRuntime = LoopRuntime()
         activity.record("host.engines.attached", "count=${engines.size}", resource = dataDir.path)
@@ -188,18 +206,26 @@ class ProductContext(
      * Use for CI without Chromium/CDP.
      */
     fun attachSmokeWithHttpBrowser(): ProductContext {
+        ensureOpen()
         dataDir.mkdirs()
         DefaultCapabilityPolicies.seed(host.capabilitySecurity)
         val list = listOf(
-            TerminalEngine(),
-            ProcessRuntimeEngine(),
-            ForgeEngine(),
+            TerminalEngine(executor = processExecutor),
+            ProcessRuntimeEngine(executor = processExecutor),
+            ForgeEngine(executor = processExecutor),
             BrowserEngine(driverKind = "http-fetch"),
         )
         list.forEach { eng ->
             val manifest = runBlocking { eng.describe() }
+            check(manifest.id.value !in startAttemptOrder) {
+                "Cannot replace engine '${manifest.id.value}' while shutdown is pending"
+            }
+            check(manifest.id.value !in engines && manifest.id.value !in host.listEngineIds()) {
+                "Cannot attach duplicate engine '${manifest.id.value}'"
+            }
             host.attach(eng, manifest)
             engines[manifest.id.value] = eng
+            shutdownPrepared = false
         }
         activity.record("host.engines.attached.smoke_http", "count=${list.size}", resource = dataDir.path)
         events.publish(
@@ -211,13 +237,21 @@ class ProductContext(
     }
 
     fun attachMinimalEngines(): ProductContext {
+        ensureOpen()
         dataDir.mkdirs()
         DefaultCapabilityPolicies.seed(host.capabilitySecurity)
-        val list = listOf(TerminalEngine(), ProcessRuntimeEngine(), ForgeEngine())
+        val list = listOf(TerminalEngine(executor = processExecutor), ProcessRuntimeEngine(executor = processExecutor), ForgeEngine(executor = processExecutor))
         list.forEach { eng ->
             val manifest = runBlocking { eng.describe() }
+            check(manifest.id.value !in startAttemptOrder) {
+                "Cannot replace engine '${manifest.id.value}' while shutdown is pending"
+            }
+            check(manifest.id.value !in engines && manifest.id.value !in host.listEngineIds()) {
+                "Cannot attach duplicate engine '${manifest.id.value}'"
+            }
             host.attach(eng, manifest)
             engines[manifest.id.value] = eng
+            shutdownPrepared = false
         }
         activity.record("host.engines.attached.minimal", "count=${list.size}", resource = dataDir.path)
         events.publish("engines.attached", "ProductContext", mapOf("count" to list.size.toString(), "mode" to "minimal"))
@@ -225,9 +259,14 @@ class ProductContext(
     }
 
     suspend fun startAll(): Map<String, EngineState> {
+        ensureOpen()
+        shutdownPrepared = false
         installKernelEventBridge()
         val out = linkedMapOf<String, EngineState>()
-        engines.keys.forEach { id -> out[id] = host.registerAndStart(EngineId(id)) }
+        engines.keys.toList().forEach { id ->
+            startAttemptOrder.add(id)
+            out[id] = host.registerAndStart(EngineId(id))
+        }
         activity.record("host.engines.started", "n=${out.size}")
         events.publish(
             "product.engines.started",
@@ -235,6 +274,47 @@ class ProductContext(
             mapOf("count" to out.size.toString(), "running" to out.values.count { it == EngineState.Running }.toString()),
         )
         return out
+    }
+
+    /**
+     * Stops engines in reverse start-attempt order.
+     * Failed or non-Stopped engines remain pending for a later retry.
+     */
+    suspend fun stopAll(): Map<String, EngineState> {
+        ensureOpen()
+        shutdownPrepared = false
+        val results = linkedMapOf<String, EngineState>()
+
+        startAttemptOrder.toList().asReversed().forEach { id ->
+            val result = try {
+                host.stopEngine(EngineId(id), "product_context_shutdown")
+                    ?: EngineState.Failed
+            } catch (_: Exception) {
+                EngineState.Failed
+            }
+
+            results[id] = result
+            if (result == EngineState.Stopped) {
+                startAttemptOrder.remove(id)
+            }
+        }
+
+        shutdownPrepared = startAttemptOrder.isEmpty()
+        activity.record(
+            "host.engines.stopped",
+            "attempted=${results.size} stopped=${results.values.count { it == EngineState.Stopped }} pending=${startAttemptOrder.size}",
+        )
+        return results
+    }
+
+    /** Closes the owned executor only after every attempted engine stopped. */
+    override fun close() {
+        ensureOpen()
+        check(shutdownPrepared && startAttemptOrder.isEmpty()) {
+            "ProductContext.close() requires a successful stopAll() first"
+        }
+        processExecutor.close()
+        closed = true
     }
 
     /** Snapshot combining kernel security + bridge state. */

@@ -1,7 +1,7 @@
 package com.mimir.integration
 
 import com.mimir.engine.provider.registry.ProviderRegistryEngine
-import com.mimir.engine.terminal.JvmProcessExecutor
+import com.mimir.adapters.process.JvmProcessExecutor
 import com.mimir.engine.terminal.TerminalCapabilities
 import com.mimir.engine.terminal.TerminalEngine
 import com.mimir.engine.terminal.TerminalPermissions

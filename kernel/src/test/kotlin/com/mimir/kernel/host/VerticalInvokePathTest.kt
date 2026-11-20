@@ -90,7 +90,7 @@ class VerticalInvokePathTest {
             )
             assertIs<InvocationResult.Ok>(result)
             assertEquals("hello", result.output["echo"])
-            assertTrue(host.audit.snapshot().any { it.capabilityId == "echo.ping" && it.decision == "ALLOW" })
+            assertTrue(host.audit.recent().any { it.capabilityId == "echo.ping" && it.decision == "ALLOW" })
         }
     }
 

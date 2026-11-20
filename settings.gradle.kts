@@ -87,6 +87,8 @@ project(":apps:androidApp").projectDir = file("apps/androidApp")
 }
 
 include(":adapters:browser")
+include(":adapters:process")
+project(":adapters:process").projectDir = file("adapters/process")
 project(":adapters:browser").projectDir = file("adapters/browser")
 
 include(":shared:memory")

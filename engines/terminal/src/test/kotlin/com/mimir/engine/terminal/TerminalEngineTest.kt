@@ -1,5 +1,7 @@
-import com.mimir.engine.terminal.JvmProcessExecutor
 package com.mimir.engine.terminal
+
+import com.mimir.adapters.process.JvmProcessExecutor
+
 
 import com.mimir.contracts.terminal.TerminalCommandRequest
 import com.mimir.contracts.terminal.TerminalSessionId

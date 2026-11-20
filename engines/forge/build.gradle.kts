@@ -1,11 +1,16 @@
-plugins { kotlin("jvm") }
+plugins {
+    `java-library`
+    kotlin("jvm")
+}
 base { archivesName.set("engine-forge") }
 
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 dependencies {
-    implementation(project(":contracts:forge"))
+    api(project(":contracts:forge"))
     implementation(project(":shared:kernel"))
-    implementation(project(":contracts:process"))
+    api(project(":contracts:process"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation(project(":adapters:process"))
 }

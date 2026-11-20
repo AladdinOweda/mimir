@@ -1,5 +1,6 @@
 package com.mimir.kernel.integration
 
+import com.mimir.adapters.process.JvmProcessExecutor
 import com.mimir.engine.process.ProcessRuntimeCapabilities
 import com.mimir.engine.process.ProcessRuntimeEngine
 import com.mimir.engine.terminal.TerminalEngine
@@ -21,7 +22,7 @@ class KernelEngineIntegrationTest {
     @Test
     fun process_argv_echo_through_kernel() = runTest {
         val host = KernelHost()
-        val eng = ProcessRuntimeEngine()
+        val eng = ProcessRuntimeEngine(executor = JvmProcessExecutor())
         val man = eng.describe()
         host.attach(eng, man)
         host.registerAndStart(man.id)
@@ -47,7 +48,7 @@ class KernelEngineIntegrationTest {
     @Test
     fun process_shell_high_risk_blocked_without_token() = runTest {
         val host = KernelHost()
-        val eng = ProcessRuntimeEngine()
+        val eng = ProcessRuntimeEngine(executor = JvmProcessExecutor())
         val man = eng.describe()
         host.attach(eng, man)
         host.registerAndStart(man.id)
