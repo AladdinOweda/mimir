@@ -1,5 +1,7 @@
 package com.mimir.engine.process
 
+import com.mimir.contracts.process.TaskBoardCapabilities
+
 import com.mimir.kernel.contract.*
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

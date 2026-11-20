@@ -1,5 +1,7 @@
 package com.mimir.engine.process
 
+import com.mimir.adapters.process.JvmProcessExecutor
+
 import com.mimir.kernel.contract.CapabilityId
 import com.mimir.kernel.contract.CapabilityRef
 import com.mimir.kernel.contract.InvocationRequest
@@ -12,17 +14,19 @@ import kotlin.test.assertTrue
 class ProcessRuntimeEngineTest {
     @Test
     fun argv_echo() = runTest {
-        val e = ProcessRuntimeEngine().also { it.start() }
-        val r = e.invoke(
-            InvocationRequest(
-                "1", "j", CapabilityRef(CapabilityId(ProcessRuntimeCapabilities.EXEC_ARGV)),
-                mapOf("argvLine" to "echo process-ok"),
-            ),
-        )
-        assertTrue(r is InvocationResult.Ok, r.toString())
-        val out = (r as InvocationResult.Ok).output
-        assertEquals("0", out["exitCode"])
-        assertTrue(out["stdout"]!!.contains("process-ok"))
+        JvmProcessExecutor().use { executor ->
+            val e = ProcessRuntimeEngine(executor).also { it.start() }
+            val r = e.invoke(
+                InvocationRequest(
+                    "1", "j", CapabilityRef(CapabilityId(ProcessRuntimeCapabilities.EXEC_ARGV)),
+                    mapOf("argvLine" to "echo process-ok"),
+                ),
+            )
+            assertTrue(r is InvocationResult.Ok, r.toString())
+            val out = (r as InvocationResult.Ok).output
+            assertEquals("0", out["exitCode"])
+            assertTrue(out["stdout"]!!.contains("process-ok"))
+        }
     }
 
     @Test
